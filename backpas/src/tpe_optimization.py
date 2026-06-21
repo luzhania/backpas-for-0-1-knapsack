@@ -91,7 +91,7 @@ def _load_optimization_data(
 def run_optimization_step(
     space_definition: Dict[str, Tuple[str, Any]], 
     data_csv_path: str, 
-    num_initial_points: int = 30, 
+    num_initial_points: int = 15, 
     random_seed: int = 42
 ) -> Union[List[Dict], None]:
     """

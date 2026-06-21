@@ -39,8 +39,8 @@ process_file() {
     if [ ! -f "$logfile" ]; then
         echo "[$count/$TOTAL_FILES] Processing $filename : $logfile"
         # Replace this line with your actual processing command
-        ulimit -v $((4 * 1024 * 1024)) # Set memory limit (in KB)
-        gurobi_cl threads=1 MIPGap=0 IncumbentLog=1 timelimit=1000 logFile="$logfile" "$file"
+        # ulimit -v $((4 * 1024 * 1024)) # Set memory limit (in KB)
+        gurobi_cl threads=0 MIPGap=0 IncumbentLog=1 timelimit=300 logFile="$logfile" "$file"
     else
         echo "[$count/$TOTAL_FILES] Skipping $filename (log file exists)"
     fi
@@ -53,5 +53,5 @@ export -f process_file
 # Process files in parallel
 #find "$INSTANCE_DIR" -type f \( -name 'valid_easy_*' \) | \
 echo "$file_list" | \
-    xargs -P 8 -I{} bash -c 'process_file "$@"' _ {}
+    xargs -P 1 -I{} bash -c 'process_file "$@"' _ {}
 rm -f "$COUNTER_FILE"

@@ -321,7 +321,7 @@ class FixedTwoRatiosTrustRegionConstructor(TrustRegionConstructor):
             elif pred_probs[i,1].item():
                 constraints.append(1-scp_var_map[tar_var]<=delta_var)
             else:
-                raise Exception("No se ha predicho un valor valido")
+                raise Exception("A valid value has not been predicted")
             deltas.append(delta_var)
         if len(deltas)>0:
             constraints.append(sum(deltas) <= Delta )

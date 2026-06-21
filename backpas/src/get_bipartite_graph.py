@@ -58,7 +58,7 @@ def normalize_model(model,add_complement_constraints=False):
     new_obj_exp = {}
     obj_offset = 0
     for term, coef in obj_exp.terms.items():
-        assert len(term.vartuple) == 1 #verifica que el termino sea un monomio (con 1 sola variable)
+        assert len(term.vartuple) == 1 # verify that the term is a monomial (with only 1 variable)
         var_name = term.vartuple[0].name
         if coef < 0:
             complement_var = var_map[f"{var_name}_complement"]
@@ -78,14 +78,14 @@ def normalize_model(model,add_complement_constraints=False):
         for used_complement_var in used_complement_vars:
             model.addCons(complement_constraints[used_complement_var])
 def normalize_features(features : str):
-    maxs = torch.max(features, 0)[0]# maximos de cada feature (el [0] es porque max retorna una tupla de (valores,indices))
-    mins = torch.min(features, 0)[0]# minimos de cada feature (el [0] es porque min retorna una tupla de (valores,indices))
-    diff = maxs - mins#Rango de cada feature
-    for ks in range(diff.shape[0]):#recorre cada feature
-        if diff[ks] == 0:#Si la feature es constante, se asume que su rango es 1
+    maxs = torch.max(features, 0)[0] # maximums of each feature (the [0] is because max returns a tuple of (values, indices))
+    mins = torch.min(features, 0)[0] # minimums of each feature (the [0] is because min returns a tuple of (values, indices))
+    diff = maxs - mins # Range of each feature
+    for ks in range(diff.shape[0]): # iterate over each feature
+        if diff[ks] == 0: # If the feature is constant, its range is assumed to be 1
             diff[ks] = 1
-    #se normaliza para que las features esten entre 0 y 1
-    return torch.clamp((features - mins)/ diff, 1e-5, 1)#se limita para que esten entre 1e-5 y 1
+    # normalized so that features are between 0 and 1
+    return torch.clamp((features - mins)/ diff, 1e-5, 1) # clamp to be between 1e-5 and 1
 
 def get_bipartite_graph_literals(ins_name : str):    
     m = scp.Model()
@@ -94,8 +94,8 @@ def get_bipartite_graph_literals(ins_name : str):
     normalize_model(m)
     
     
-    cons = m.getConss() #lista de constraints
-    #Saca de la lista de constraint aquellas que no tienen coeficientes
+    cons = m.getConss() # list of constraints
+    # Remove constraints without coefficients from the list
     new_cons = []
     for cind, c in enumerate(cons):
         coeff = m.getValsLinear(c)
@@ -103,28 +103,28 @@ def get_bipartite_graph_literals(ins_name : str):
             continue
         new_cons.append(c)
     cons = new_cons
-    ncons = len(cons) #Cantidad de constraints no vacias
-    #Ordena las constraints segun el numero de variables que tiene (en caso de empate se ordenan por nombre de constraint)
+    ncons = len(cons) # Number of non-empty constraints
+    # Sort constraints according to the number of variables they have (ties broken by constraint name)
     cons_map = [[x, len(m.getValsLinear(x))] for x in cons]
     cons_map = sorted(cons_map, key=lambda x: [x[1], str(x[0])])
     cons = [x[0] for x in cons_map]
 
-    l_map = {} #diccionario tipo {l_name: l_index}
+    l_map = {} # dictionary of type {l_name: l_index}
     l_nodes = []
     #literal embedding
     # [position] name: meaning
     # [0] obj: normalized coefficient of literal in the objective function
     # [1] l_coeff: average coefficient of the literal in all constraints
-    # [2] Nl_coeff: degree of literal node in the bipartite representation (en cuantas restricciones aparece el LITERAL)
+    # [2] Nl_coeff: degree of literal node in the bipartite representation (number of constraints the LITERAL appears in)
     # [3] max_coeff: maximum value among all coefficients of the literal
     # [4] min_coeff: minimum value among all coefficients of the literal
-    # [5] Nv_coeff: degree of variable node in the bipartite representation (en cuantas restricciones aparece la VARIABLE)
-    mvars = m.getVars() #lista de variables
-    mvars.sort(key=lambda v: v.name) #ordena variables por nombre
-    for i in range(len(mvars)): #recorre cada variable
+    # [5] Nv_coeff: degree of variable node in the bipartite representation (number of constraints the VARIABLE appears in)
+    mvars = m.getVars() # list of variables
+    mvars.sort(key=lambda v: v.name) # sort variables by name
+    for i in range(len(mvars)): # iterate over each variable
         l_nodes.append([0,0,0,0,m.infinity(),0])
     
-    l_map = {} # diccionario tipo {nombreVaribale: indice}
+    l_map = {} # dictionary of type {variableName: index}
     indx = 0
     for v in mvars:
         if v.name.endswith("_complement"):
@@ -139,14 +139,14 @@ def get_bipartite_graph_literals(ins_name : str):
     # [1] Nc_coeff: degree of constraint nodes in the bipartite representation
     # [2] rhs: right-hand-side value of the constraint
     # [3] sense: the sense of the constraint
-    indices_spr = [[], []] # Coordenadas de arcos [constraintIndexes, variableIndexes]
-    values_spr = [] # Peso que habra en la matriz de adjacencia
+    indices_spr = [[], []] # Edge coordinates [constraintIndexes, variableIndexes]
+    values_spr = [] # Weight for the adjacency matrix
 
-    for cind, c in enumerate(cons): #itera sobre las constraints
-        coeff = m.getValsLinear(c) #diccionario de coeficientes {nombreVariable: coeficiente}
+    for cind, c in enumerate(cons): # iterate over constraints
+        coeff = m.getValsLinear(c) # dictionary of coefficients {variableName: coefficient}
         rhs = m.getRhs(c)
         lhs = m.getLhs(c)
-        assert rhs!=m.infinity() or lhs!=-m.infinity() #al menos uno de los dos debe ser finito
+        assert rhs!=m.infinity() or lhs!=-m.infinity() # at least one of the two must be finite
         #this assumes that the constraint is of the form lhs <= expr <= rhs with only one of lhs or rhs being finite or both being equal
         if lhs == rhs:
             sense = 0 # exp = rhs
@@ -157,48 +157,48 @@ def get_bipartite_graph_literals(ins_name : str):
             sense = -1 # exp <= rhs
 
         summation = 0
-        for lit in coeff: #Recorre los nombres de las variables
-            if coeff[lit] != 0: #Si el coeficienet no es 0 añade el arco que conecta la restriccion con el literal
-                l_indx = l_map[lit] #obtiene el indice del literal
-                indices_spr[0].append(cind) #indice de la constraint
-                indices_spr[1].append(l_indx) #indice de la variable
-                values_spr.append(coeff[lit]) #valor del coeficiente (peso del arco)
+        for lit in coeff: # Iterate over variable names
+            if coeff[lit] != 0: # If the coefficient is not 0, add the edge connecting the constraint with the literal
+                l_indx = l_map[lit] # get the index of the literal
+                indices_spr[0].append(cind) # index of the constraint
+                indices_spr[1].append(l_indx) # index of the variable
+                values_spr.append(coeff[lit]) # coefficient value (edge weight)
             
-                l_nodes[l_indx][1] += coeff[lit] / ncons #Añade el coeficiente normalizado (segun la restriccion) al embedding de la variable
-                l_nodes[l_indx][2] += 1 #Agrega 1 al contador de restricciones en la que participa el literal
+                l_nodes[l_indx][1] += coeff[lit] / ncons # Add normalized coefficient (according to constraint) to variable embedding
+                l_nodes[l_indx][2] += 1 # Add 1 to the count of constraints in which the literal participates
                 
-                l_nodes[l_indx][3] = max(l_nodes[l_indx][3], coeff[lit]) # Actualiza el maximo coeficiente de la variable
-                l_nodes[l_indx][4] = min(l_nodes[l_indx][4], coeff[lit]) # Actualiza e minimio coeficiente de la variable
-                l_nodes[l_indx][5] += 1 #Agrega 1 al contador de restricciones en la que participa la variable
+                l_nodes[l_indx][3] = max(l_nodes[l_indx][3], coeff[lit]) # Update maximum coefficient of the variable
+                l_nodes[l_indx][4] = min(l_nodes[l_indx][4], coeff[lit]) # Update minimum coefficient of the variable
+                l_nodes[l_indx][5] += 1 # Add 1 to the count of constraints in which the variable participates
                 neg_lit = lit+"_complement" if not lit.endswith("_complement") else lit[:-11]
-                l_nodes[l_map[neg_lit]][5] = l_nodes[l_indx][5] #Actualiza el contador tambien en su negacion
+                l_nodes[l_map[neg_lit]][5] = l_nodes[l_indx][5] # Update the count also in its negation
 
-                summation += coeff[lit] #Acumula todos los coeficientes de la restriccion
-        llc = max(len(coeff), 1) #numero de coeficientes en la restriccion (asume que almenos hay 1)
-        c_nodes.append([summation / llc, llc, rhs, sense]) #agrega los embeddings de la restriccion
+                summation += coeff[lit] # Accumulate all coefficients of the constraint
+        llc = max(len(coeff), 1) # number of coefficients in the constraint (assumes at least 1)
+        c_nodes.append([summation / llc, llc, rhs, sense]) # add the constraint embeddings
     obj = m.getObjective()
     is_optimization = len(obj.terms)!=0
     if is_optimization:
-        obj_node = [0, 0, 0, 0] # nodo (restriccion) que representa la funcion objetivo
-        for e in obj: #terminos en la funcion objetivo
-            vnm = e.vartuple[0].name #nombre de la variable
-            v = obj[e] #coeficiente de la variable
-            #v_indx = v_map[vnm] #indice de la variable
-            if v != 0: # Si el coeficiente no es 0 añade el arco que une la variable a la restriccion (func. objetivo)
+        obj_node = [0, 0, 0, 0] # node (constraint) representing the objective function
+        for e in obj: # terms in the objective function
+            vnm = e.vartuple[0].name # variable name
+            v = obj[e] # variable coefficient
+            #v_indx = v_map[vnm] # variable index
+            if v != 0: # If coefficient is not 0, add edge connecting variable to constraint (objective function)
                 if v>0:
                     lit = vnm
                 else:
                     lit = vnm+"_complement"
-                l_indx = l_map[lit] #obtiene el indice del literal
-                indices_spr[0].append(ncons) #Indice de la restriccion (func. objetivo)
-                indices_spr[1].append(l_indx) #Indice del literal
+                l_indx = l_map[lit] # get literal index
+                indices_spr[0].append(ncons) # Index of constraint (objective function)
+                indices_spr[1].append(l_indx) # Literal index
                 values_spr.append(v)
-                l_nodes[l_indx][0] = v #añade el coeficiente de la variable en la funcion objetivo al embedding de la variable
+                l_nodes[l_indx][0] = v # add the coefficient of the variable in the objective function to the variable embedding
 
-                obj_node[0] += v #acumula los coeficientes de todas las variables
-                obj_node[1] += 1 #cuanta cuantos coeficientes hay (cuantas varibles)
+                obj_node[0] += v # accumulate coefficients of all variables
+                obj_node[1] += 1 # counts how many coefficients there are (how many variables)
         
-        obj_node[0] /= obj_node[1] #calcula la media de los coeficientes en la restriccion (func. objetivo)
+        obj_node[0] /= obj_node[1] # calculate average of coefficients in constraint (objective function)
         c_nodes.append(obj_node)
         ncons+=1
     

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import pickle
 import argparse
 from get_bipartite_graph import get_standard_bipartite_graph
@@ -47,6 +48,10 @@ def get_backbone_target(backbone_path: str, v_map:dict):
             if variable_name == "0" and i == len_lines - 1: #completion signal
                 complete_backbone = True
                 break
+            # If the variable name does not have the prefix "x", we add it
+            if not variable_name.startswith("x"):
+                variable_name = "x" + variable_name
+                
             target[v_map[variable_name]] = value
     if not complete_backbone:
         raise Exception("Backbone not complete")
@@ -74,7 +79,7 @@ def collect(instance_path:str, backbone_path:str, filename:str ,ml_dataset_path 
         }
         pickle.dump(data, open(os.path.join(ml_dataset_path, filename+'.pkl'), 'wb'))
     except Exception as e:
-        print(f"Error procesando archivo {filename}: {e}")
+        print(f"Error processing file {filename}: {e}")
     
     
 
@@ -102,12 +107,12 @@ def main():
     
     remaining_filenames = []
     for filename in filenames:
-        #Añade los que faltan
+        # Add the missing ones
         if not os.path.exists(os.path.join(ml_dataset_path,filename+'.pkl')):
             remaining_filenames.append(filename)
     n = len(remaining_filenames)
     for i in range(n):
-        print(f"Procesando {i}/{n}: {remaining_filenames[i]}")
+        print(f"Processing {i}/{n}: {remaining_filenames[i]}")
         collect(instance_path,backbone_path,remaining_filenames[i],ml_dataset_path,graph_type)
     print(f"Total files processed: {n}")
 if __name__ == '__main__':

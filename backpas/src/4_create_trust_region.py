@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import torch
 from constants import LITERALS_GRAPH, VARIABLES_GRAPH, THRESHOLDED_EXPECTED_ERROR, THRESHOLDED_WEIGHTED_BUDGET, FIXED_THREE_RATIOS, FIXED_TWO_RATIOS

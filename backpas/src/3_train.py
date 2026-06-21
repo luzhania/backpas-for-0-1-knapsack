@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import pickle as pkl
 import argparse
@@ -141,15 +142,15 @@ def main():
     # Model parameters
     parser.add_argument("--graph_type", type=str, choices=[LITERALS_GRAPH, VARIABLES_GRAPH], default=LITERALS_GRAPH, help="Type of bipartite graphs contained in ml_dataset_path.")
     parser.add_argument("--layer_type", type=str, choices=[GCN_LAYER, GTR_LAYER], default=GTR_LAYER, help=f"Type of GNN layer to use in the model. {GCN_LAYER} for Graph Convolutional Network, {GTR_LAYER} for Graph Transformer.")
-    parser.add_argument("--num_layers", type=int, default=8, help="Number of GNN layers in the model.")
+    parser.add_argument("--num_layers", type=int, default=3, help="Number of GNN layers in the model.")
     parser.add_argument("--use_literals_message", action="store_true", help="Whether to use pass messages between literals after each GNN layer. If not set, only messages between constraints and variables will be performed. This can only be used with the literals graph type.")
     
     # Running purpose
     parser.add_argument("--only_run_test", action="store_true", help="If set, only run the test phase without training the model.")
     
     # Training parameters
-    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training the model.")
-    parser.add_argument("--batch_accumulation_size", type=int, default=32, help="Number of samples to accumulate gradients before performing an optimizer step.")
+    parser.add_argument("--batch_size", type=int, default=128, help="Batch size for training the model.")
+    parser.add_argument("--batch_accumulation_size", type=int, default=128, help="Number of samples to accumulate gradients before performing an optimizer step.")
     parser.add_argument("--epochs", type=int, default=200, help="Number of epochs to train the model.")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate for the optimizer.")
     parser.add_argument("--use_cuda", action="store_true", help="If set, use CUDA for training the model. If not set, use CPU.")

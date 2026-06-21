@@ -12,7 +12,7 @@ if [ ! -d "$DATASET_PATH" ]; then
     exit 1
 fi
 
-INSTANCE_DIR="$DATASET_PATH/instance"
+INSTANCE_DIR="$DATASET_PATH"
 BACKBONE_DIR="$DATASET_PATH/backbone"
 LOG_DIR="$DATASET_PATH/backbone_extraction_log"
 
@@ -27,7 +27,7 @@ TOTAL_FILES=$( echo "$file_list" | wc -l )
 echo 0 > "$COUNTER_FILE"
 
 # Export the script and variables to use in parallel subshells
-export INSTANCE_DIR BACKBONE_DIR LOG_DIR COUNTER_FILE TOTAL_FILES
+export INSTANCE_DIR BACKBONE_DIR LOG_DIR COUNTER_FILE TOTAL_FILES GUROBACK_EXEC
 
 
 # Counter function (thread-safe using flock)
@@ -52,8 +52,8 @@ process_file() {
     if [ ! -f "$logfile" ]; then
         echo "[$count/$TOTAL_FILES] Processing $filename"
         # Replace this line with your actual processing command
-        ulimit -v $((4 * 1024 * 1024)) # Set memory limit (in KB)
-        "$GUROBACK_EXEC" Threads=1 FeasibilityTol=1e-9 OptimalityTol=1e-9 IntFeasTol=1e-9 "$file" "$output" > "$logfile" 2>&1
+        # ulimit -v $((4 * 1024 * 1024)) # Set memory limit (in KB)
+        $GUROBACK_EXEC Threads=0 FeasibilityTol=1e-9 OptimalityTol=1e-9 IntFeasTol=1e-9 "$file" "$output" > "$logfile" 2>&1
     else
         echo "[$count/$TOTAL_FILES] Skipping $filename (log file exists)"
     fi
@@ -66,5 +66,5 @@ export -f process_file
 # Process files in parallel
 #find "$INSTANCE_DIR" -type f \( -name 'valid_easy_*' \) | \
 echo "$file_list" | \
-    xargs -P 8 -I{} bash -c 'process_file "$@"' _ {}
+    xargs -P 1 -I{} bash -c 'process_file "$@"' _ {}
 rm -f "$COUNTER_FILE"
