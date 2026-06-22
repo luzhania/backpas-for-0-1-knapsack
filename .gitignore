@@ -1,2 +1,4 @@
 backpas/jupyter/__pycache__
 backpas/src/__pycache__
+*.log
+*.pkl
