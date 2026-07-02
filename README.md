@@ -1,6 +1,18 @@
 # BackPaS for 0-1 Knapsack: An Experimental Evaluation
 
-This repository contains the experimental environment and datasets used for the article presented at the *Jornadas Chilenas de Computación* (JCC).
+This repository contains the source code, experimental environment, and datasets for the paper **"BackPaS for 0-1 Knapsack: An experimental evaluation"**.
+
+The 0-1 Knapsack Problem is often considered one of the more tractable NP-hard problems; however, "correlated" instances remain a formidable challenge for modern exact solvers. This project evaluates the application of the Backbone-based Predict and Search (BackPaS) framework—a method originally specialized for Pseudo-Boolean Optimization—to tackle the highly difficult *bounded strongly correlated* instances of the 0-1 Knapsack Problem. 
+
+By using Graph Neural Networks (GNNs) to predict backbone variables (variable-value pairs fixed across all optimal solutions), we construct an adaptive trust region that dynamically restricts the solver's search space, accelerating the exact solving process.
+
+## Key Libraries & Environment
+
+The most critical libraries utilized in this project are:
+- **`gurobi` (v12.0.3)**: For exact solving and iterative backbone extraction.
+- **`optuna` (v4.8.0)**: For Bayesian hyperparameter optimization of the trust region parameters.
+
+You can use the provided `environment.yml` file to fully recreate the environment with all the required dependencies.
 
 ## Credits and Origin
 
@@ -29,8 +41,8 @@ The datasets corresponding to each of the evaluation scenarios are located under
 ### 1. Prerequisites
 
 - **C++ Compiler**: A compiler supporting C++11 (e.g., `g++` or `clang++`).
-- **Gurobi Optimizer**: A valid Gurobi installation and license (tested with versions 10 and 11).
-- **Conda**: For managing python packages.
+- **Gurobi Optimizer**: A valid Gurobi installation and license.
+- **Python Environment**: You can use the provided `environment.yml` file to recreate the exact environment required to run the scripts.
 
 ### 2. Compiling GuroBack
 
@@ -58,7 +70,7 @@ The `knapsack` folder provides tools to generate 0-1 knapsack instances and conv
    ./convert_all_to_opb.sh
    cd ../..
    ```
-   *Note: This automatically places the converted `.opb` files in the `backpas/dataset/14_bounded_strongly_correlated/instance/` directory.*
+   *Note: This automatically places the converted `.opb` files in the `backpas/dataset/<SCENARIO_FOLDER>/instance/` directory.*
 
 ### 4. Execution Workflow
 
@@ -74,7 +86,7 @@ With the `.opb` instances ready, run the following pipeline scripts in order:
    ```sh
    ./validation.sh
    ```
-   This validates the trust region parameters using the trained model to find the best configuration.
+   This validates the trust region parameters using the trained model to find the best configuration (via Optuna).
 
 3. **Testing**:
    ```sh
